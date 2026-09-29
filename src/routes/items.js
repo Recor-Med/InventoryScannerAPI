@@ -3,17 +3,10 @@ const { getConnection } = require('../sfClient');
 
 const router = express.Router();
 
-// GET /api/items?warehouseCode=ABC
-// Returns the consignment inventory items for a given warehouse.
+// GET /api/items
+// Returns the consignment inventory items.
 router.get('/items', async (req, res) => {
-  const warehouseCode = (req.query.warehouseCode || '').toString().trim();
-
-  if (!warehouseCode) {
-    return res.status(400).json({ error: 'Missing required query parameter: warehouseCode' });
-  }
-
   const itemObject = process.env.SF_ITEM_OBJECT || 'cr5bd_inventoryitem__c';
-  const warehouseField = process.env.SF_ITEM_WAREHOUSE_FIELD || 'cr5bd_warehousecode__c';
 
   try {
     const conn = await getConnection();
@@ -22,7 +15,6 @@ router.get('/items', async (req, res) => {
       SELECT Id, cr5bd_sku__c, cr5bd_description__c, cr5bd_lotnumber__c,
              cr5bd_expirydate__c, cr5bd_quantity__c
       FROM ${itemObject}
-      WHERE ${warehouseField} = '${escapeSoql(warehouseCode)}'
     `;
     const result = await conn.query(soql);
 

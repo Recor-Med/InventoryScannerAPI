@@ -5,8 +5,7 @@ const router = express.Router();
 
 // GET /api/account?number=12345
 // Looks up a single Account in Salesforce by its account number and returns
-// the fields the scanner app needs to confirm the account and drive the
-// warehouse-scoped inventory lookup.
+// the fields the scanner app needs to confirm the account.
 router.get('/account', async (req, res) => {
   const accountNumber = (req.query.number || '').toString().trim();
 
@@ -16,12 +15,11 @@ router.get('/account', async (req, res) => {
 
   const accountObject = process.env.SF_ACCOUNT_OBJECT || 'Account';
   const numberField = process.env.SF_ACCOUNT_NUMBER_FIELD || 'Recor_Account_Number__c';
-  const warehouseField = process.env.SF_WAREHOUSE_CODE_FIELD || 'cr5bd_warehousecode__c';
 
   try {
     const conn = await getConnection();
 
-    const soql = `SELECT Id, Name, ${warehouseField} FROM ${accountObject} WHERE ${numberField} = '${escapeSoql(accountNumber)}' LIMIT 1`;
+    const soql = `SELECT Id, Name FROM ${accountObject} WHERE ${numberField} = '${escapeSoql(accountNumber)}' LIMIT 1`;
     const result = await conn.query(soql);
 
     if (!result.records || result.records.length === 0) {
@@ -30,22 +28,17 @@ router.get('/account', async (req, res) => {
 
     const record = result.records[0];
     const name = record.Name;
-    const warehouseCode = record[warehouseField];
 
-    if (!name || !warehouseCode) {
+    if (!name) {
       return res.status(422).json({
         error: 'Account found but missing required fields.',
-        missing: {
-          name: !name,
-          warehouseCode: !warehouseCode,
-        },
+        missing: { name: true },
       });
     }
 
     return res.json({
       id: record.Id,
       name,
-      warehouseCode,
     });
   } catch (err) {
     console.error('Error in GET /api/account:', err);
