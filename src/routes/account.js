@@ -15,7 +15,7 @@ router.get('/account', async (req, res) => {
   }
 
   const accountObject = process.env.SF_ACCOUNT_OBJECT || 'Account';
-  const numberField = process.env.SF_ACCOUNT_NUMBER_FIELD || 'AccountNumber';
+  const numberField = process.env.SF_ACCOUNT_NUMBER_FIELD || 'Recor_Account_Number__c';
   const warehouseField = process.env.SF_WAREHOUSE_CODE_FIELD || 'cr5bd_warehousecode__c';
 
   try {
