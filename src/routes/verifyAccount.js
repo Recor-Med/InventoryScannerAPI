@@ -7,7 +7,7 @@ const router = express.Router();
 // Simple existence check: does an Account with this Recor Account Number
 // exist? Returns { found: true, id, name } or { found: false }. Useful for
 // a quick end-to-end smoke test of the Salesforce connection without
-// requiring every field (e.g. warehouse code) to be populated.
+// end-to-end smoke test of the Salesforce connection.
 router.get('/verify-account', async (req, res) => {
   const accountNumber = (req.query.number || '').toString().trim();
 

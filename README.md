@@ -8,12 +8,12 @@ stock counts back to Salesforce. Designed to be hosted on Azure App Service.
 
 These match what [app.js](../Recor%20Scanner/app.js) in the scanner frontend calls:
 
-- `GET /api/account?number=<accountNumber>` → `{ id, name, warehouseCode }`
+- `GET /api/account?number=<accountNumber>` → `{ id, name }`
   - `404` if no account found
-  - `422` if account found but missing `Name` or warehouse code field
-- `GET /api/items?warehouseCode=<code>` → `{ items: [...] }`
+  - `422` if account found but missing `Name`
+- `GET /api/items` → `{ items: [...] }`
 - `GET /api/ids` → `{ ids: [...] }`
-- `POST /api/submit` with JSON body `{ account, accountName, warehouseCode, date, codes: [...] }`
+- `POST /api/submit` with JSON body `{ account, accountName, date, codes: [...] }`
 
 ## Local setup
 
@@ -94,9 +94,9 @@ Ask your Salesforce admin to:
 - `SF_JWT_PRIVATE_KEY_PATH` — alternative to the above: a file path to
   `server.key` if you'd rather mount/deploy the key as a file instead of an
   environment variable.
-- `SF_ACCOUNT_OBJECT`, `SF_ACCOUNT_NUMBER_FIELD`, `SF_WAREHOUSE_CODE_FIELD` —
+- `SF_ACCOUNT_OBJECT`, `SF_ACCOUNT_NUMBER_FIELD` —
   object/field API names for account lookups. Defaults assume standard
-  `Account.AccountNumber` plus a custom `cr5bd_warehousecode__c` field.
+  `Account.Recor_Account_Number__c`.
 - `SF_ITEM_OBJECT` / `SF_ID_OBJECT` — custom object API names for inventory
   items and the product ID lookup table.
 - `SF_SUBMIT_FLOW_API_NAME` — optional. If set, `/api/submit` invokes this
