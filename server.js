@@ -4,7 +4,6 @@ const express = require('express');
 const cors = require('cors');
 
 const accountRoutes = require('./src/routes/account');
-const verifyAccountRoutes = require('./src/routes/verifyAccount');
 const itemsRoutes = require('./src/routes/items');
 const idsRoutes = require('./src/routes/ids');
 const submitRoutes = require('./src/routes/submit');
@@ -32,7 +31,6 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api', accountRoutes);
-app.use('/api', verifyAccountRoutes);
 app.use('/api', itemsRoutes);
 app.use('/api', idsRoutes);
 app.use('/api', submitRoutes);

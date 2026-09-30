@@ -4,8 +4,8 @@ const { getConnection } = require('../sfClient');
 const router = express.Router();
 
 // GET /api/account?number=12345
-// Looks up a single Account in Salesforce by its account number and returns
-// the fields the scanner app needs to confirm the account.
+// Checks whether an Account exists in Salesforce with this Recor Account
+// Number and returns its basic details if found.
 router.get('/account', async (req, res) => {
   const accountNumber = (req.query.number || '').toString().trim();
 
@@ -23,26 +23,20 @@ router.get('/account', async (req, res) => {
     const result = await conn.query(soql);
 
     if (!result.records || result.records.length === 0) {
-      return res.status(404).json({ error: `No account found for ${accountNumber}` });
+      return res.status(404).json({ found: false, error: `No account found for ${accountNumber}` });
     }
 
     const record = result.records[0];
-    const name = record.Name;
-
-    if (!name) {
-      return res.status(422).json({
-        error: 'Account found but missing required fields.',
-        missing: { name: true },
-      });
-    }
 
     return res.json({
+      found: true,
       id: record.Id,
-      name,
+      name: record.Name,
     });
   } catch (err) {
     console.error('Error in GET /api/account:', err);
     return res.status(500).json({ error: 'Internal server error looking up account.' });
+
   }
 });
 
