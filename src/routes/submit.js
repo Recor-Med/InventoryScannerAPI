@@ -4,7 +4,7 @@ const { getConnection } = require('../sfClient');
 const router = express.Router();
 
 // POST /api/submit
-// Body: { account, accountName, date, codes: [{ sku, description, lot, expiry, quantity, count }] }
+// Body: { account, accountName, date, codes: [{ sku, lotSerial, expiry, quantity, count }] }
 //
 // Records the submitted stock count back into Salesforce. If
 // SF_SUBMIT_FLOW_API_NAME is configured, the payload is forwarded to that

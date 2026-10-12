@@ -1,7 +1,7 @@
 # Recor Scanner API
 
 Backend API for the Recor Inventory Scanner app. Looks up Salesforce Account
-records, consignment inventory items and product IDs, and submits scanned
+records, inventory product items and product IDs, and submits scanned
 stock counts back to Salesforce. Designed to be hosted on Azure App Service.
 
 ## Endpoints
