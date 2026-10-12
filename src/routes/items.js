@@ -15,7 +15,7 @@ router.get('/items', async (req, res) => {
     return res.status(400).json({ error: 'Missing required query parameter: accountNumber' });
   }
 
-  const itemObject = process.env.SF_ITEM_OBJECT || 'Inventory_Product_line__c';
+  const itemObject = process.env.SF_ITEM_OBJECT || 'Inventory_Product_Line__c';
   const idField = process.env.SF_ITEM_ID_FIELD || 'Inventory_Product_Line_Id__c';
   const skuField = process.env.SF_ITEM_SKU_FIELD || 'Product_Part_Number__c';
   const lotSerialField = process.env.SF_ITEM_LOT_SERIAL_FIELD || 'Lot_Serial_Number__c';
