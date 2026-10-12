@@ -56,6 +56,41 @@ app.get('/api/_debug/objects', async (req, res) => {
   }
 });
 
+// TEMPORARY: directly describe the specific object to surface the real
+// underlying reason it's inaccessible (licensing vs. permission vs. typo).
+app.get('/api/_debug/describe-item-object', async (req, res) => {
+  try {
+    const conn = await getConnection();
+    const whoAmI = await conn.identity();
+    let describeResult = null;
+    let describeError = null;
+    try {
+      describeResult = await conn.sobject('Inventory_Product_Line__c').describe();
+    } catch (e) {
+      describeError = { message: e.message, errorCode: e.errorCode, name: e.name };
+    }
+    res.json({
+      runningAsUserId: whoAmI.user_id,
+      runningAsUsername: whoAmI.username,
+      profileUrl: whoAmI.profile,
+      describeError,
+      describeResult: describeResult
+        ? {
+            name: describeResult.name,
+            label: describeResult.label,
+            queryable: describeResult.queryable,
+            accessible: describeResult.accessible,
+            createable: describeResult.createable,
+            custom: describeResult.custom,
+          }
+        : null,
+    });
+  } catch (err) {
+    console.error('Error in /api/_debug/describe-item-object:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use('/api', accountRoutes);
 app.use('/api', itemsRoutes);
 app.use('/api', idsRoutes);
