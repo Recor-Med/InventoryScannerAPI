@@ -40,7 +40,16 @@ app.get('/api/_debug/objects', async (req, res) => {
     const matches = describe.sobjects
       .filter((o) => o.name.toLowerCase().includes('inventory'))
       .map((o) => ({ name: o.name, label: o.label, custom: o.custom, queryable: o.queryable }));
-    res.json({ count: matches.length, matches });
+    const customObjects = describe.sobjects
+      .filter((o) => o.custom)
+      .map((o) => ({ name: o.name, label: o.label, queryable: o.queryable }));
+    res.json({
+      inventoryMatchCount: matches.length,
+      inventoryMatches: matches,
+      totalObjectsVisible: describe.sobjects.length,
+      customObjectCount: customObjects.length,
+      customObjects,
+    });
   } catch (err) {
     console.error('Error in /api/_debug/objects:', err);
     res.status(500).json({ error: err.message });
