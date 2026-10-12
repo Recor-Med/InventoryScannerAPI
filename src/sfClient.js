@@ -75,9 +75,7 @@ async function getConnection() {
 
 function getPrivateKey(inlineKey, keyPath) {
   if (inlineKey) {
-    // Support keys stored with literal \n sequences (common when stored as
-    // a single-line environment variable / Key Vault secret).
-    return inlineKey.includes('\\n') ? inlineKey.replace(/\\n/g, '\n') : inlineKey;
+    return normalizePemKey(inlineKey);
   }
   if (keyPath) {
     return fs.readFileSync(keyPath, 'utf8');
@@ -85,6 +83,38 @@ function getPrivateKey(inlineKey, keyPath) {
   throw new Error(
     'Missing Salesforce JWT private key. Set SF_JWT_PRIVATE_KEY (PEM contents) or SF_JWT_PRIVATE_KEY_PATH (file path).'
   );
+}
+
+// Normalizes a PEM private key that may have been stored as a single-line
+// environment variable / Key Vault secret in one of a few lossy formats:
+//  - literal "\n" escape sequences instead of real newlines (handled first)
+//  - no newlines or escapes at all, with the BEGIN/END markers and base64
+//    body all run together on one line (reconstructed below)
+// A valid PEM key already containing real newlines is returned unchanged.
+function normalizePemKey(key) {
+  let normalized = key.trim();
+
+  if (normalized.includes('\\n')) {
+    normalized = normalized.replace(/\\n/g, '\n');
+  }
+
+  if (normalized.includes('\n')) {
+    return normalized;
+  }
+
+  // No newlines at all: the header, base64 body and footer are all on one
+  // line. Pull them apart and rebuild proper PEM formatting (64-char body
+  // lines, as OpenSSL produces).
+  const match = normalized.match(/^(-----BEGIN [^-]+-----)(.*)(-----END [^-]+-----)$/);
+  if (!match) {
+    // Doesn't look like a recognizable single-line PEM key either; return
+    // as-is so the original error from the crypto library still surfaces.
+    return normalized;
+  }
+
+  const [, header, body, footer] = match;
+  const bodyLines = body.match(/.{1,64}/g) || [body];
+  return [header, ...bodyLines, footer].join('\n');
 }
 
 module.exports = { getConnection };
