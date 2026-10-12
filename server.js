@@ -7,6 +7,7 @@ const accountRoutes = require('./src/routes/account');
 const itemsRoutes = require('./src/routes/items');
 const idsRoutes = require('./src/routes/ids');
 const submitRoutes = require('./src/routes/submit');
+const { getConnection } = require('./src/sfClient');
 
 const app = express();
 
@@ -28,6 +29,22 @@ app.get('/', (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+// TEMPORARY diagnostic route - lists exact object API names containing "Inventory"
+// as seen by the Salesforce API itself. Remove once the object name mismatch is resolved.
+app.get('/api/_debug/objects', async (req, res) => {
+  try {
+    const conn = await getConnection();
+    const describe = await conn.describeGlobal();
+    const matches = describe.sobjects
+      .filter((o) => o.name.toLowerCase().includes('inventory'))
+      .map((o) => ({ name: o.name, label: o.label, custom: o.custom, queryable: o.queryable }));
+    res.json({ count: matches.length, matches });
+  } catch (err) {
+    console.error('Error in /api/_debug/objects:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.use('/api', accountRoutes);
