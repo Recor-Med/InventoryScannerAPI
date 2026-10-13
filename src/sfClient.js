@@ -66,7 +66,7 @@ async function getConnection() {
   const conn = new jsforce.Connection({
     instanceUrl,
     accessToken,
-    version: process.env.SF_API_VERSION || '61.0',
+    version: process.env.SF_API_VERSION || '68.0',
   });
 
   cachedConnection = conn;
