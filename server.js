@@ -79,6 +79,22 @@ app.get('/api/_debug/describe-item-object', async (req, res) => {
     } catch (e) {
       rawError = { message: e.message, errorCode: e.errorCode, name: e.name };
     }
+    let queryResult = null;
+    let queryError = null;
+    try {
+      queryResult = await conn.query(
+        'SELECT Id FROM Inventory_Product_Line__c LIMIT 1'
+      );
+    } catch (e) {
+      queryError = { message: e.message, errorCode: e.errorCode, name: e.name };
+    }
+    let globalDescribeHasIt = null;
+    try {
+      const g = await conn.describeGlobal();
+      globalDescribeHasIt = g.sobjects.some((o) => o.name === 'Inventory_Product_Line__c');
+    } catch (e) {
+      globalDescribeHasIt = `error: ${e.message}`;
+    }
     res.json({
       runningAsUserId: whoAmI.user_id,
       runningAsUsername: whoAmI.username,
@@ -98,6 +114,9 @@ app.get('/api/_debug/describe-item-object', async (req, res) => {
         : null,
       rawError,
       rawResultName: rawResult ? rawResult.name : null,
+      queryError,
+      queryRecordCount: queryResult ? queryResult.totalSize : null,
+      globalDescribeHasIt,
     });
   } catch (err) {
     console.error('Error in /api/_debug/describe-item-object:', err);
