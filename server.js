@@ -69,10 +69,22 @@ app.get('/api/_debug/describe-item-object', async (req, res) => {
     } catch (e) {
       describeError = { message: e.message, errorCode: e.errorCode, name: e.name };
     }
+    let rawResult = null;
+    let rawError = null;
+    try {
+      rawResult = await conn.request({
+        method: 'GET',
+        url: `${conn.instanceUrl}/services/data/v${conn.version}/sobjects/Inventory_Product_Line__c/describe`,
+      });
+    } catch (e) {
+      rawError = { message: e.message, errorCode: e.errorCode, name: e.name };
+    }
     res.json({
       runningAsUserId: whoAmI.user_id,
       runningAsUsername: whoAmI.username,
       profileUrl: whoAmI.profile,
+      connectionApiVersion: conn.version,
+      instanceUrl: conn.instanceUrl,
       describeError,
       describeResult: describeResult
         ? {
@@ -84,6 +96,8 @@ app.get('/api/_debug/describe-item-object', async (req, res) => {
             custom: describeResult.custom,
           }
         : null,
+      rawError,
+      rawResultName: rawResult ? rawResult.name : null,
     });
   } catch (err) {
     console.error('Error in /api/_debug/describe-item-object:', err);
