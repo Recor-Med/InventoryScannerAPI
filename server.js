@@ -95,6 +95,20 @@ app.get('/api/_debug/describe-item-object', async (req, res) => {
     } catch (e) {
       globalDescribeHasIt = `error: ${e.message}`;
     }
+    let product2Result = null;
+    let product2Error = null;
+    try {
+      product2Result = await conn.query('SELECT Id, Name FROM Product2 LIMIT 1');
+    } catch (e) {
+      product2Error = { message: e.message, errorCode: e.errorCode, name: e.name };
+    }
+    let inventoryProductResult = null;
+    let inventoryProductError = null;
+    try {
+      inventoryProductResult = await conn.query('SELECT Id, Name FROM Inventory_Product__c LIMIT 1');
+    } catch (e) {
+      inventoryProductError = { message: e.message, errorCode: e.errorCode, name: e.name };
+    }
     res.json({
       runningAsUserId: whoAmI.user_id,
       runningAsUsername: whoAmI.username,
@@ -117,6 +131,10 @@ app.get('/api/_debug/describe-item-object', async (req, res) => {
       queryError,
       queryRecordCount: queryResult ? queryResult.totalSize : null,
       globalDescribeHasIt,
+      product2Error,
+      product2RecordCount: product2Result ? product2Result.totalSize : null,
+      inventoryProductError,
+      inventoryProductRecordCount: inventoryProductResult ? inventoryProductResult.totalSize : null,
     });
   } catch (err) {
     console.error('Error in /api/_debug/describe-item-object:', err);
