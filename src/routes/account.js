@@ -28,8 +28,8 @@ router.get('/account', async (req, res) => {
     const conn = await getConnection();
 
     const soql = accountId
-      ? `SELECT Id, Name, ${numberField} FROM ${accountObject} WHERE Id = '${escapeSoql(accountId)}' LIMIT 1`
-      : `SELECT Id, Name, ${numberField} FROM ${accountObject} WHERE ${numberField} = '${escapeSoql(accountNumber)}' LIMIT 1`;
+      ? `SELECT Id, ${numberField} FROM ${accountObject} WHERE Id = '${escapeSoql(accountId)}' LIMIT 1`
+      : `SELECT Id, ${numberField} FROM ${accountObject} WHERE ${numberField} = '${escapeSoql(accountNumber)}' LIMIT 1`;
     const result = await conn.query(soql);
 
     if (!result.records || result.records.length === 0) {
@@ -52,7 +52,6 @@ router.get('/account', async (req, res) => {
     return res.json({
       found: true,
       id: record.Id,
-      name: record.Name,
       accountNumber: resolvedAccountNumber,
     });
   } catch (err) {

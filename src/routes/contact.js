@@ -25,8 +25,8 @@ router.get('/contact', async (req, res) => {
     const conn = await getConnection();
 
     const soql = contactId
-      ? `SELECT Id, Name, Email FROM Contact WHERE Id = '${escapeSoql(contactId)}' LIMIT 1`
-      : `SELECT Id, Name, Email FROM Contact WHERE Email = '${escapeSoql(email)}' LIMIT 1`;
+      ? `SELECT Id, Email FROM Contact WHERE Id = '${escapeSoql(contactId)}' LIMIT 1`
+      : `SELECT Id, Email FROM Contact WHERE Email = '${escapeSoql(email)}' LIMIT 1`;
     const result = await conn.query(soql);
 
     if (!result.records || result.records.length === 0) {
@@ -48,7 +48,6 @@ router.get('/contact', async (req, res) => {
     return res.json({
       found: true,
       id: record.Id,
-      name: record.Name,
       email: record.Email,
     });
   } catch (err) {
