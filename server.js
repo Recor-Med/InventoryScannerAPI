@@ -7,6 +7,7 @@ const accountRoutes = require('./src/routes/account');
 const itemsRoutes = require('./src/routes/items');
 const idsRoutes = require('./src/routes/ids');
 const submitRoutes = require('./src/routes/submit');
+const contactRoutes = require('./src/routes/contact');
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api', accountRoutes);
 app.use('/api', itemsRoutes);
 app.use('/api', idsRoutes);
 app.use('/api', submitRoutes);
+app.use('/api', contactRoutes);
 
 // Fallback 404
 app.use((req, res) => {

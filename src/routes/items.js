@@ -3,16 +3,20 @@ const { getConnection } = require('../sfClient');
 
 const router = express.Router();
 
-// GET /api/items?accountNumber=12345
+// GET /api/items?prefix=12345
+//  OR  /api/items?accountNumber=12345   (legacy alias, still supported)
+//
 // Returns every Inventory_Product_line__c record whose
-// Inventory_Product_Line_Id__c starts with the given account number (i.e.
-// each product line ID is expected to be prefixed with the account number
-// it belongs to).
+// Inventory_Product_Line_Id__c starts with the given prefix. The prefix is
+// either a Recor account number (for inventory linked to an Account) or a
+// contact's email address (for inventory linked directly to a Contact) —
+// the caller resolves which one to use via /api/account or /api/contact
+// first, then passes the resulting value here unchanged.
 router.get('/items', async (req, res) => {
-  const accountNumber = (req.query.accountNumber || '').toString().trim();
+  const prefix = (req.query.prefix || req.query.accountNumber || '').toString().trim();
 
-  if (!accountNumber) {
-    return res.status(400).json({ error: 'Missing required query parameter: accountNumber' });
+  if (!prefix) {
+    return res.status(400).json({ error: 'Missing required query parameter: prefix' });
   }
 
   const itemObject = process.env.SF_ITEM_OBJECT || 'Inventory_Product_Line__c';
@@ -28,7 +32,7 @@ router.get('/items', async (req, res) => {
     const soql = `
       SELECT Id, ${idField}, ${skuField}, ${lotSerialField}, ${expiryField}, ${quantityField}
       FROM ${itemObject}
-      WHERE ${idField} LIKE '${escapeSoqlLike(accountNumber)}%'
+      WHERE ${idField} LIKE '${escapeSoqlLike(prefix)}%'
     `;
     const result = await conn.query(soql);
 
