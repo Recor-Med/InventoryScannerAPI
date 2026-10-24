@@ -15,7 +15,7 @@ const router = express.Router();
 // one Inventory_Count_Line__c child record per scanned table row,
 // referencing the parent via its Id.
 router.post('/submit', async (req, res) => {
-  const { recordType, accountId, contactId, codes } = req.body || {};
+  const { recordType, accountId, contactId, codes, date } = req.body || {};
 
   if (recordType !== 'account' && recordType !== 'contact') {
     return res.status(400).json({ error: "Missing or invalid 'recordType' (must be 'account' or 'contact')." });
@@ -28,6 +28,9 @@ router.post('/submit', async (req, res) => {
   }
   if (!Array.isArray(codes) || codes.length === 0) {
     return res.status(400).json({ error: 'Missing or empty required field: codes' });
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) {
+    return res.status(400).json({ error: "Missing or invalid required field: date (expected YYYY-MM-DD)" });
   }
 
   const countObject = process.env.SF_COUNT_OBJECT || 'Inventory_Count__c';
@@ -43,9 +46,11 @@ router.post('/submit', async (req, res) => {
   const lineSkuField = process.env.SF_COUNT_LINE_SKU_FIELD || 'Product_Sku__c';
   const lineParentField = process.env.SF_COUNT_LINE_PARENT_FIELD || 'Inventory_Count__c';
 
-  // Use the server's own current date, rather than trusting a client-
-  // supplied date, for both the parent record's Name and Date__c.
-  const todayIso = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  // Use the date supplied by the client (computed from the user's own
+  // local clock/timezone, not the server's) for both the parent record's
+  // Name and Date__c - the server's timezone has no bearing on what
+  // "today" means for whoever is actually using the scanner.
+  const todayIso = date;
 
   try {
     const conn = await getConnection();
