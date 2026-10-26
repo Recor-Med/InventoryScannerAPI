@@ -15,7 +15,7 @@ const router = express.Router();
 // one Inventory_Count_Line__c child record per scanned table row,
 // referencing the parent via its Id.
 router.post('/submit', async (req, res) => {
-  const { recordType, accountId, contactId, codes, date } = req.body || {};
+  const { recordType, accountId, contactId, codes } = req.body || {};
 
   if (recordType !== 'account' && recordType !== 'contact') {
     return res.status(400).json({ error: "Missing or invalid 'recordType' (must be 'account' or 'contact')." });
@@ -29,12 +29,8 @@ router.post('/submit', async (req, res) => {
   if (!Array.isArray(codes) || codes.length === 0) {
     return res.status(400).json({ error: 'Missing or empty required field: codes' });
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) {
-    return res.status(400).json({ error: "Missing or invalid required field: date (expected YYYY-MM-DD)" });
-  }
 
   const countObject = process.env.SF_COUNT_OBJECT || 'Inventory_Count__c';
-  const countDateField = process.env.SF_COUNT_DATE_FIELD || 'Date__c';
   const countAccountField = process.env.SF_COUNT_ACCOUNT_FIELD || 'Account__c';
   const countContactField = process.env.SF_COUNT_CONTACT_FIELD || 'Contact__c';
 
@@ -46,18 +42,28 @@ router.post('/submit', async (req, res) => {
   const lineSkuField = process.env.SF_COUNT_LINE_SKU_FIELD || 'Product_Sku__c';
   const lineParentField = process.env.SF_COUNT_LINE_PARENT_FIELD || 'Inventory_Count__c';
 
-  // Use the date supplied by the client (computed from the user's own
-  // local clock/timezone, not the server's) for both the parent record's
-  // Name and Date__c - the server's timezone has no bearing on what
-  // "today" means for whoever is actually using the scanner.
-  const todayIso = date;
+  // Logged on every request (rather than just once at startup) since this
+  // route is stateless/serverless-friendly and env vars can't change
+  // without a restart anyway - this makes it trivial to confirm exactly
+  // which object/field API names a given deployment is actually using,
+  // without needing separate access to the Azure App Service config.
+  console.log('Submitting inventory count with object/field config:', {
+    countObject,
+    countAccountField,
+    countContactField,
+    lineObject,
+    lineExpiryField,
+    lineCountField,
+    lineQuantityField,
+    lineLotSerialField,
+    lineSkuField,
+    lineParentField,
+  });
 
   try {
     const conn = await getConnection();
 
     const parentRecord = {
-      Name: todayIso,
-      [countDateField]: todayIso,
       [recordType === 'account' ? countAccountField : countContactField]:
         recordType === 'account' ? accountId : contactId,
     };
