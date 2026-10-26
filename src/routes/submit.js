@@ -64,8 +64,11 @@ router.post('/submit', async (req, res) => {
 
     const parentResult = await conn.sobject(countObject).create(parentRecord);
     if (!parentResult.success) {
-      console.error('Error creating Inventory_Count__c:', parentResult.errors);
-      return res.status(500).json({ error: 'Failed to create Inventory_Count__c record.', details: parentResult.errors });
+      console.error('Error creating Inventory_Count__c:', JSON.stringify(parentResult.errors));
+      return res.status(500).json({
+        error: 'Failed to create Inventory_Count__c record.',
+        details: parentResult.errors,
+      });
     }
 
     const lineRecords = codes.map((code) => ({
@@ -99,8 +102,19 @@ router.post('/submit', async (req, res) => {
       inventoryCountLineIds: lineResultsArray.map((result) => result.id),
     });
   } catch (err) {
+    // jsforce throws on Salesforce-side failures (validation rules, bad Ids,
+    // required-field errors, etc.) rather than always resolving with
+    // success:false, so most real failures land here. Surface the actual
+    // Salesforce error detail rather than a generic message, since this is
+    // an internal tool and the detail is essential for diagnosing why a
+    // submission failed (bad field API name, invalid Id, validation rule...).
     console.error('Error in POST /api/submit:', err);
-    return res.status(500).json({ error: 'Internal server error submitting inventory count.' });
+    return res.status(500).json({
+      error: 'Internal server error submitting inventory count.',
+      message: err.message,
+      errorCode: err.errorCode,
+      fields: err.fields,
+    });
   }
 });
 
