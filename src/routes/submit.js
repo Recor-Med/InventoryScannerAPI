@@ -42,24 +42,6 @@ router.post('/submit', async (req, res) => {
   const lineSkuField = process.env.SF_COUNT_LINE_SKU_FIELD || 'Product_Sku__c';
   const lineParentField = process.env.SF_COUNT_LINE_PARENT_FIELD || 'Inventory_Count__c';
 
-  // Logged on every request (rather than just once at startup) since this
-  // route is stateless/serverless-friendly and env vars can't change
-  // without a restart anyway - this makes it trivial to confirm exactly
-  // which object/field API names a given deployment is actually using,
-  // without needing separate access to the Azure App Service config.
-  console.log('Submitting inventory count with object/field config:', {
-    countObject,
-    countAccountField,
-    countContactField,
-    lineObject,
-    lineExpiryField,
-    lineCountField,
-    lineQuantityField,
-    lineLotSerialField,
-    lineSkuField,
-    lineParentField,
-  });
-
   try {
     const conn = await getConnection();
 
@@ -110,17 +92,11 @@ router.post('/submit', async (req, res) => {
   } catch (err) {
     // jsforce throws on Salesforce-side failures (validation rules, bad Ids,
     // required-field errors, etc.) rather than always resolving with
-    // success:false, so most real failures land here. Surface the actual
-    // Salesforce error detail rather than a generic message, since this is
-    // an internal tool and the detail is essential for diagnosing why a
-    // submission failed (bad field API name, invalid Id, validation rule...).
+    // success:false, so most real failures land here. Log the full detail
+    // server-side for diagnosis, but don't echo Salesforce internals back
+    // to the client.
     console.error('Error in POST /api/submit:', err);
-    return res.status(500).json({
-      error: 'Internal server error submitting inventory count.',
-      message: err.message,
-      errorCode: err.errorCode,
-      fields: err.fields,
-    });
+    return res.status(500).json({ error: 'Internal server error submitting inventory count.' });
   }
 });
 
