@@ -52,16 +52,7 @@ router.get('/contact', async (req, res) => {
     });
   } catch (err) {
     console.error('Error in GET /api/contact:', err);
-    // Surface the underlying Salesforce error (code + message) rather than
-    // a generic message - this endpoint has historically failed silently
-    // in production (e.g. field/object-level security issues specific to
-    // Contact) with no way to diagnose it from the client or without
-    // server log access.
-    return res.status(500).json({
-      error: 'Internal server error looking up contact.',
-      sfErrorCode: err.errorCode || null,
-      sfErrorMessage: err.message || null,
-    });
+    return res.status(500).json({ error: 'Internal server error looking up contact.' });
   }
 });
 
